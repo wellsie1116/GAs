@@ -27,9 +27,13 @@ class Genome:
     def breed(self, other):
         def cross(self, other, p1, p2):
             newGenome = Genome(self.width, self.height)
-            for x in range(p1[0], p2[0]+1):
-                for y in range(p1[1], p2[1]+1):
+            for x in range(self.width):
+                for y in range(self.height):
+                    newGenome.grid[x][y] = self.grid[x][y]
+            for x in range(p1[0], p2[0]):
+                for y in range(p1[1], p2[1]):
                     newGenome.grid[x][y] = other.grid[x][y]
+            return newGenome
         def randIndex(size):
             i1, i2 = randint(0, size), randint(0, size)
             if i1 > i2:
@@ -41,14 +45,17 @@ class Genome:
             genome.mutate()
         return newGenomes
     def mutate(self):
-        #TODO implement
-        pass
+        for x in range(self.width):
+            for y in range(self.height):
+                if random() < 0.05:
+                    self.grid[x][y] = not self.grid[x][y] 
 
 class Board:
     def __init__(self, genome):
         self.grid = [list(row) for row in genome.grid]
         self.width = genome.width
         self.height = genome.height
+        self.isAlive = True
 
     def getCell(self, x, y):
         if x < 0 or x > self.width - 1 or y < 0 or y > self.height - 1:
@@ -76,7 +83,6 @@ class Board:
 
     def calcNextGrid(self):
         nextgrid = [[False for x in range(self.width)] for y in range(self.height)]
-        aliveCells = 0
         for x in range(self.width):
             for y in range(self.height):
                 cnt = self.getPopAdjCells(x, y)
@@ -84,16 +90,21 @@ class Board:
                     nextgrid[x][y] = cnt == 2 or cnt ==3
                 else:
                     nextgrid[x][y] = cnt == 3
-                if nextgrid[x][y]:
-                    aliveCells += 1
-        return nextgrid, aliveCells
+        return nextgrid
                 
     def step(self):
-        self.grid, aliveCells = self.calcNextGrid()
-        return aliveCells
+        self.grid = self.calcNextGrid()
 
     def __hash__(self):
-        return 0
+        hashCode = 0
+        i = 3
+        for x in range(self.width):
+            for y in range(self.height):
+                if self.grid[x][y]:
+                    hashCode += ((x << 8) | (y << 8)) * i
+                    i += 2
+        return hashCode
+        #return hash(tuple([tuple(row) for row in self.grid]))
     
     def __eq__(self, other):
         def cellsEqual():
@@ -104,9 +115,6 @@ class Board:
             return True
 
         return self.width == other.width and self.height == other.height and cellsEqual()
-
-
-
 
 class Generation:
     def __init__(self, n):
@@ -144,26 +152,22 @@ class Generation:
                 if pair not in pairs:
                     pairs.append(pair)
             return pairs
-        pairs = genPairs(int(len(self.genomes)/2))
+        count = int(len(self.genomes)/2)
+        if len(self.genomes) % 2 == 1:
+            count += 1
+        pairs = genPairs(count)
 
         #breed the pairs
         nextGen = Generation(self.n+1)
         for pair in pairs:
             a, b = pair
-            nextGen.genomes.append(a.breed(b))
-            nextGen.genomes.append(b.breed(a))
+            nextGen.genomes.extend(a.breed(b))
 
         #keep lengths the same (for odd sized generations)
         while len(nextGen.genomes) > len(self.genomes):
             nextGen.genomes.pop(randint(0, len(nextGen.genomes)-1))
 
         return nextGen
-    def __str__(self):
-        return 'Generation {0}\n{1}'.format(
-            self.n,
-            '\n'.join(['{0} ({1:.4f})'.format(
-                        str(genome),
-                        score) for genome, score in zip(self.genomes, self.scores)]))
 
 def main():
     import lifegui
