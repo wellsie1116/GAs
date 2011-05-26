@@ -125,16 +125,26 @@ def main():
 
     win.setBoards(boards)
 
-    scores = {}
+    prevBoards = {}
+    for board in boards:
+        prevBoards[board] = set()
+        #prevBoards[board].add(Board(board))
+
     def step():
+        alive = False
         for board in boards:
-            aliveCells = board.step()
-            if aliveCells:
-                scores[board] = scores.get(board, 0) + 1
+            if board not in prevBoards[board]:
+                prevBoards[board].add(Board(board))
+                aliveCells = board.step()
+                if aliveCells:
+                    alive = True
         win.queue_draw()
+        if not alive:
+            print("Done")
+            return 0
         return 1
 
-    gobject.timeout_add(500, step)
+    gobject.timeout_add(100, step)
 
     gtk.main()
 

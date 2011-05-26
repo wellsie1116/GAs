@@ -92,6 +92,20 @@ class Board:
         self.grid, aliveCells = self.calcNextGrid()
         return aliveCells
 
+    def __hash__(self):
+        return 0
+    
+    def __eq__(self, other):
+        def cellsEqual():
+            for x in range(self.width):
+                for y in range(self.height):
+                    if self.grid[x][y] != other.grid[x][y]:
+                        return False
+            return True
+
+        return self.width == other.width and self.height == other.height and cellsEqual()
+
+
 
 
 class Generation:
