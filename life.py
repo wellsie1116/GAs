@@ -23,7 +23,7 @@ class Genome:
     def randomize(self):
         for x in range(self.width):
             for y in range(self.height):
-               self.grid[x][y] = random() < .1
+               self.grid[x][y] = random() < .01
     def breed(self, other):
         def cross(self, other, p1, p2):
             newGenome = Genome(self.width, self.height)
@@ -47,7 +47,7 @@ class Genome:
     def mutate(self):
         for x in range(self.width):
             for y in range(self.height):
-                if random() < 0.05:
+                if random() < 0.01:
                     self.grid[x][y] = not self.grid[x][y] 
 
 class Board:
